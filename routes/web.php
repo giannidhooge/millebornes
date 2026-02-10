@@ -1,17 +1,22 @@
 <?php
 
+use App\Http\Controllers\GameController;
+use App\Http\Controllers\LobbyController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
+        // dd(auth()->user());
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return Inertia::render('Welcome');
+})->name('welcome');
 
-require __DIR__.'/settings.php';
+Route::get('/lobbies/create', [LobbyController::class, 'create'])->name('lobbies.create');
+Route::post('/lobbies', [LobbyController::class, 'store'])->name('lobbies.store');
+Route::get('/lobbies/{code}', [LobbyController::class, 'show'])->name('lobbies.show');
+Route::post('/join', [LobbyController::class, 'join'])->name('lobbies.join');
+
+Route::post('/games/{roomCode}/start', [GameController::class, 'start'])->name('games.start');
+Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+Route::post('/games/{game}/action', [GameController::class, 'action'])->name('games.action');
+
