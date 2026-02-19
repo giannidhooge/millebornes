@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Player;
+use App\Http\Resources\PlayerResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,8 +17,10 @@ class GameResource extends JsonResource
             'code' => $this->code,
             'deck_size' => count($this->deck),
             'discard_pile' => $this->discard_pile,
+            'last_discard_card' => array_last($this->discard_pile),
+            'status' => $this->status,
             'current_player' => $this->currentPlayer?->toArray(),
-            'players' => $this->players->toArray($request),
+            'players' => $this->players->map(fn(Player $player) => PlayerResource::make($player)),
         ];
     }
 }

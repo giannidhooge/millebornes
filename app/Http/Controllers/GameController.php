@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CardDrawn;
+use Auth;
 use App\Models\Game;
-use App\Models\Player;
 use App\Models\Lobby;
+use App\Exceptions\AbstractMilleBornesException;
 use App\Services\MilleBornesService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Auth;
 use App\Events\GameStart;
 use App\Events\SwitchTurn;
 use App\Http\Resources\GameResource;
+use Throwable;
+use Exception;
+use Log;
 
 class GameController extends Controller
 {
@@ -51,19 +55,33 @@ class GameController extends Controller
         $cardIndex = $request->input('card_index');
         $targetPlayerId = $request->input('target_player_id');
 
-        if ($action === 'draw') {
-            $this->gameService->drawCard($game);
+        try {
+            if ($action === 'draw') {
+                $this->gameService->drawCard($game);
+
+                event(new CardDrawn($game));
+
+                return back();
+            }
+
+            match ($action) {
+                'play' => $this->gameService->playCard($game, $player, $cardIndex, $targetPlayerId),
+                'discard' => $this->gameService->discardCard($player, $cardIndex),
+                default => throw new Exception('Invalid action.'),
+            };
+        } catch (Throwable $e) {
+            if ($e instanceof AbstractMilleBornesException) {
+                Inertia::flash('message', $e->getMessage());
+
+                return back();
+            }
+
+            Log::error($e);
 
             return back();
         }
-
-        match ($action) {
-            'play' => $this->gameService->playCard($player, $cardIndex, $targetPlayerId),
-            'discard' => $this->gameService->discardCard($player, $cardIndex),
-            default => throw new Exception('Invalid action.'),
-        };
     
-        event(new SwitchTurn($game));
+        event(new SwitchTurn($game->refresh()));
 
         return back();
     }
