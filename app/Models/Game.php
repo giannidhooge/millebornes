@@ -34,6 +34,11 @@ class Game extends Model
         return $this->belongsTo(Player::class, 'current_player_id');
     }
 
+    public function lastTargetPlayer(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'last_targeted_player_id');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'unique_identifier';

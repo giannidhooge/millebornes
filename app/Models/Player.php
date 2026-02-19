@@ -25,7 +25,9 @@ class Player extends Authenticatable
 
     public function hasSafety(string $safetySubtype): bool
     {
-        return in_array($safetySubtype, $this->safeties, true);
+        return collect($this->safeties, function ($safety) use ($safetySubtype) {
+            return $safety['subtype'] === $safetySubtype;
+        })->count() > 0;
     }
 
     public function getTopBattleCard(): ?array

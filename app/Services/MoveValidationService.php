@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\CannotPlayCoupFourreException;
 use App\Exceptions\CannotPlayDistanceException;
 use App\Exceptions\InvalidCardTypeException;
 use App\Exceptions\InvalidHazardTargetException;
@@ -46,7 +47,40 @@ class MoveValidationService
                 break;
 
             default:
-                throw new InvalidCardTypeException("Unknown card type: {$cardType}");
+                throw new InvalidCardTypeException('Unknown card type: ' . $cardType);
+        }
+    }
+
+    public function validateCoupFourre(Game $game, Player $player, array $card): void
+    {
+        if ($game->last_targeted_player_id !== $player->id) {
+            throw new CannotPlayCoupFourreException('You were not the last targeted player.');
+        }
+
+        $cardSubtype = $card['subtype'];
+
+        // Map safety cards to the hazard they counter
+        $safetyToHazard = [
+            'right_of_way' => ['stop', 'speed_limit'],
+            'extra_tank' => ['out_of_gas'],
+            'puncture_proof' => ['flat_tire'],
+            'driving_ace' => ['accident'],
+        ];
+
+        if (isset($safetyToHazard[$cardSubtype]) === false) {
+            throw new CannotPlayCoupFourreException('Unknown safety card subtype: ' . $cardSubtype);
+        }
+
+        $topBattleCard = $player->getTopBattleCard();
+        if ($topBattleCard === null) {
+            throw new CannotPlayCoupFourreException('No hazard on your battle pile to Coup Fourré.');
+        }
+
+        $countersHazards = $safetyToHazard[$cardSubtype];
+        if (in_array($topBattleCard['subtype'], $countersHazards, true) === false) {
+            throw new CannotPlayCoupFourreException(
+                'Your ' . $cardSubtype . ' safety cannot Coup Fourré a ' . $topBattleCard['subtype'] . 'card.'
+            );
         }
     }
 
@@ -61,7 +95,7 @@ class MoveValidationService
         $canRoll = ($topBattleCard !== null && $topBattleCard['subtype'] === 'roll') || $hasRightOfWay;
 
         if ($canRoll === false) {
-            throw new CannotPlayDistanceException("You need a Roll card (or Right of Way) to play distance cards.");
+            throw new CannotPlayDistanceException('You need a Roll card (or Right of Way) to play distance cards.');
         }
 
         // If Right of Way is active but a non-speed hazard is on top, only remedy fixes it
@@ -70,7 +104,7 @@ class MoveValidationService
             $blockingHazards = ['out_of_gas', 'flat_tire', 'accident'];
             if (in_array($topBattleCard['subtype'], $blockingHazards, true)) {
                 throw new UnresolvedHazardException(
-                    "You must remedy the {$topBattleCard['subtype']} before playing distance cards."
+                    'You must remedy the ' . $topBattleCard['subtype'] . ' before playing distance cards.'
                 );
             }
         }
@@ -79,38 +113,36 @@ class MoveValidationService
         // only 25 and 50 mile cards are allowed (Right of Way ignores speed limit too)
         if (!$hasRightOfWay && $player->hasActiveSpeedLimit()) {
             if ($value > 50) {
-                throw new SpeedLimitException("Speed limit in effect: only 25 or 50 mile cards may be played.");
+                throw new SpeedLimitException('Speed limit in effect: only 25 or 50 mile cards may be played.');
             }
         }
 
         // Cannot exceed 1000 miles total
         $currentMileage = $player->getTotalMileage();
         if ($currentMileage + $value > 1000) {
-            throw new MileageExceededException(
-                "Playing this card would exceed 1000 miles (current: {$currentMileage}, card: {$value})."
-            );
+            throw new MileageExceededException('Playing this card would exceed 1000 miles (current: ' . $currentMileage . ', card: ' . $value);
         }
 
         // No more than two 200-mile cards
         if ($value === 200 && $player->getDistanceCardCount('200') >= 2) {
-            throw new TwoHundredLimitException("You may not play more than two 200-mile cards.");
+            throw new TwoHundredLimitException('You may not play more than two 200-mile cards.');
         }
     }
 
     private function validateHazardCard(Player $player, array $card, ?string $targetPlayerId): void
     {
         if ($targetPlayerId === null) {
-            throw new InvalidTargetException("Hazard cards must target an opponent.");
+            throw new InvalidTargetException('Hazard cards must target an opponent.');
         }
 
         $target = $this->getPlayer($targetPlayerId);
         if ($target === null) {
-            throw new InvalidTargetException("Target player not found.");
+            throw new InvalidTargetException('Target player not found.');
         }
 
         // Cannot target yourself or your partner
         if ($player->unique_identifier === $target->unique_identifier) {
-            throw new InvalidTargetException("You cannot play hazard cards against yourself or your partner.");
+            throw new InvalidTargetException('You cannot play hazard cards against yourself or your partner.');
         }
 
         $subtype = $card['subtype'];
@@ -120,7 +152,7 @@ class MoveValidationService
             // Can be played even if target already has a Speed Limit or a hazard on Battle Pile (rules hint H)
             // But cannot play if target has Right of Way safety
             if ($target->hasSafety('right_of_way')) {
-                throw new SafetyBlocksHazardException("Target's Right of Way prevents Speed Limit cards.");
+                throw new SafetyBlocksHazardException('Target\'s Right of Way prevents Speed Limit cards.');
             }
 
             return;
@@ -137,11 +169,11 @@ class MoveValidationService
         if ($subtype === 'stop') {
             // Stop can only be played on Roll card; Right of Way blocks it entirely
             if ($targetHasRightOfWay) {
-                throw new SafetyBlocksHazardException("Target's Right of Way prevents Stop cards.");
+                throw new SafetyBlocksHazardException('Target\'s Right of Way prevents Stop cards.');
             }
 
             if ($topBattleCard === null || $topBattleCard['subtype'] !== 'roll') {
-                throw new InvalidHazardTargetException("Stop can only be played on top of a Roll card.");
+                throw new InvalidHazardTargetException('Stop can only be played on top of a Roll card.');
             }
 
             return;
@@ -156,20 +188,18 @@ class MoveValidationService
         ];
 
         if (isset($safetyMap[$subtype]) && $target->hasSafety($safetyMap[$subtype])) {
-            throw new SafetyBlocksHazardException(
-                "Target's safety card prevents playing {$subtype}."
-            );
+            throw new SafetyBlocksHazardException('Target\'s safety card prevents playing ' . $subtype . '.');
         }
 
         // Must be played on top of a Roll card (or on Right of Way battle pile top = remedy card, which is also valid per rules)
-        // "This is also the only time an opponent can play a Hazard Card directly on top of any Remedy Card other than a Roll Card"
+        // 'This is also the only time an opponent can play a Hazard Card directly on top of any Remedy Card other than a Roll Card'
         if ($targetHasRightOfWay) {
             // With Right of Way, these can be played on top of remedy cards too
             // Just verify the top is not already a pending unresolved hazard of these types
             $blockingHazards = ['out_of_gas', 'flat_tire', 'accident'];
             if ($topBattleCard !== null && in_array($topBattleCard['subtype'], $blockingHazards, true)) {
                 throw new InvalidHazardTargetException(
-                    "Cannot stack hazard on top of an unresolved hazard."
+                    'Cannot stack hazard on top of an unresolved hazard.'
                 );
             }
 
@@ -179,7 +209,7 @@ class MoveValidationService
         // Normal: must play on Roll card
         if ($topBattleCard === null || $topBattleCard['subtype'] !== 'roll') {
             throw new InvalidHazardTargetException(
-                "{$subtype} must be played on top of a Roll card."
+                $subtype . ' must be played on top of a Roll card.'
             );
         }
     }
@@ -193,7 +223,7 @@ class MoveValidationService
         if ($subtype === 'end_of_limit') {
             // End of Limit goes on own Speed Pile, on top of a Speed Limit card
             if ($topSpeedCard === null || $topSpeedCard['subtype'] !== 'speed_limit') {
-                throw new InvalidRemedyException("End of Limit can only be played on top of a Speed Limit card.");
+                throw new InvalidRemedyException('End of Limit can only be played on top of a Speed Limit card.');
             }
         
             return;
@@ -209,9 +239,7 @@ class MoveValidationService
             $rollableOn = [null, 'stop', 'gasoline', 'spare_tire', 'repairs'];
             $topSubtype = $topBattleCard ? $topBattleCard['subtype'] : null;
             if (in_array($topSubtype, $rollableOn, true) === false) {
-                throw new InvalidRemedyException(
-                    "Roll cannot be played on top of '{$topSubtype}'."
-                );
+                throw new InvalidRemedyException('Roll cannot be played on top of ' . $topSubtype . '.');
             }
 
             return;
@@ -225,7 +253,7 @@ class MoveValidationService
         ];
 
         if (isset($remedyToHazard[$subtype]) === false) {
-            throw new InvalidRemedyException("Unknown remedy subtype: {$subtype}");
+            throw new InvalidRemedyException('Unknown remedy subtype: '. $subtype);
         }
 
         $requiredHazard = $remedyToHazard[$subtype];
@@ -233,7 +261,7 @@ class MoveValidationService
 
         if ($topSubtype !== $requiredHazard) {
             throw new InvalidRemedyException(
-                "{$subtype} can only be played on top of a {$requiredHazard} card (top is: " . ($topSubtype ?? 'none') . ")."
+                '{$subtype} can only be played on top of a ' . $requiredHazard . ' card (top is: ' . ($topSubtype ?? 'none') . ').'
             );
         }
     }

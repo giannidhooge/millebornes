@@ -22,6 +22,7 @@ return new class extends Migration
             $table->json('deck');
             $table->json('discard_pile');
             $table->unsignedBigInteger('current_player_id')->nullable();
+            $table->unsignedBigInteger('last_targeted_player_id')->nullable();
             $table->timestamps();
         });
 
@@ -41,13 +42,14 @@ return new class extends Migration
 
         Schema::table('games', function (Blueprint $table) {
             $table->foreign('current_player_id')->references('id')->on('players')->nullOnDelete();
+            $table->foreign('last_targeted_player_id')->references('id')->on('players')->nullOnDelete();
         });
     }
 
     public function down(): void
     {
         Schema::table('games', function (Blueprint $table) {
-            $table->dropForeign(['current_player_id']);
+            $table->dropForeign(['current_player_id', 'last_targeted_player_id']);
         });
         Schema::dropIfExists('players');
         Schema::dropIfExists('games');

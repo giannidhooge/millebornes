@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\PlayerWon;
 use App\Models\Enums\CardType;
 use App\Models\Game;
 use App\Models\Lobby;
@@ -67,6 +68,36 @@ class MilleBornesService
         $game->save();
     }
 
+    public function coupFourre(Game $game, Player $player, int $cardIndex): void
+    {
+        $hand = $player->hand;
+        $card = $hand[$cardIndex] ?? null;
+
+        app(MoveValidationService::class)->validateCoupFourre($game, $player, $card);
+
+        array_splice($hand, $cardIndex, 1);
+        $player->hand = $hand;
+
+        $safeties = $player->safeties ?? [];
+        $safeties[] = $card;
+        $player->safeties = $safeties;
+
+        $battlePile = $player->battle_pile;
+        $battlePile[] = [
+            'type' => CardType::CARD_TYPE_REMEDY,
+            'subtype' => CardType::REMEDY_ROLL,
+            'value' => 0,
+            'label' => 'Roll',
+        ];
+        $player->battle_pile = $battlePile;
+
+        $player->save();
+
+        $game->last_targeted_player_id = null;
+        $game->current_player_id = $player->id;
+        $game->save();
+    }
+
     public function playCard(Game $game, Player $player, int $cardIndex, ?string $targetPlayerId = null): void
     {
         $hand = $player->hand;
@@ -86,11 +117,21 @@ class MilleBornesService
                 $pile = $player->distance_pile ?? [];
                 $pile[] = $card;
                 $player->distance_pile = $pile;
+                
+                $game->last_targeted_player_id = null;
+
+                if ($player->getTotalMileage() === 1000) {
+                    $game->status = 'finished';
+                    $game->current_player_id = null;
+
+                    event(new PlayerWon($game, $player));
+                }
+
                 break;
             case CardType::CARD_TYPE_HAZARD:
                 $targetPlayer = $game->players->where('unique_identifier', $targetPlayerId)->firstOrFail();
 
-                if ($card['subtype'] === 'speed_limit') {
+                if ($card['subtype'] === CardType::HAZARD_SPEED_LIMIT) {
                     $speedPile = $targetPlayer->speed_pile;
                     $speedPile[] = $card;
                     $targetPlayer->speed_pile = $speedPile;
@@ -102,21 +143,55 @@ class MilleBornesService
                 $battlePile[] = $card;
                 $targetPlayer->battle_pile = $battlePile;
                 $targetPlayer->save();
+
+                $game->last_targeted_player_id = $targetPlayer->id;
                 break;
             case CardType::CARD_TYPE_REMEDY:
+                if ($card['subtype'] === CardType::REMEDY_END_OF_LIMIT) {
+                    $speedPile = $player->speed_pile;
+                    $speedPile[] = $card;
+                    $player->speed_pile = $speedPile;
+                    break;
+                }
+
                 $battlePile = $player->battle_pile;
                 $battlePile[] = $card;
                 $player->battle_pile = $battlePile;
+
+                $game->last_targeted_player_id = null;
                 break;
             case CardType::CARD_TYPE_SAFETY:
                 $safeties = $player->safeties ?? [];
                 $safeties[] = $card;
                 $player->safeties = $safeties;
-                // TODO Logic for coup fourre
+
+                $topBattleCard = $player->getTopBattleCard();
+
+                $safetyToHazard = [
+                    'right_of_way' => ['stop', 'speed_limit'],
+                    'extra_tank' => ['out_of_gas'],
+                    'puncture_proof' => ['flat_tire'],
+                    'driving_ace' => ['accident'],
+                ];
+
+                $countersHazards = $safetyToHazard[$card['subtype']];
+                if ($topBattleCard && in_array($topBattleCard['subtype'], $countersHazards, true)) {
+                    $battlePile = $player->battle_pile;
+                    $battlePile[] = [
+                        'type' => CardType::CARD_TYPE_REMEDY,
+                        'subtype' => CardType::REMEDY_ROLL,
+                        'value' => 0,
+                        'label' => 'Roll',
+                    ];
+                    $player->battle_pile = $battlePile;
+                }
+
+                $game->last_targeted_player_id = null;
                 break;
         }
 
         $player->save();
+        $game->save();
 
         $this->nextTurn($game);
     }
@@ -144,6 +219,10 @@ class MilleBornesService
 
     private function nextTurn(Game $game): void
     {
+        if ($game->status === 'finished') {
+            return;
+        }
+                
         $players = $game->players()->get();
         $currentPlayerIndex = $players->search(fn ($p) => $p->id === $game->current_player_id);
         $nextPlayerIndex = ($currentPlayerIndex + 1) % $players->count();
