@@ -15,6 +15,8 @@ class SwitchTurn implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    private Game $game;
+
     public function __construct(Game $game)
     {
         $this->game = $game;

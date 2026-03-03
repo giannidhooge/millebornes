@@ -67,7 +67,7 @@ class MilleBornesService
         $game->save();
     }
 
-    public function playCard(Player $player, int $cardIndex, ?int $targetPlayerId = null): void
+    public function playCard(Game $game, Player $player, int $cardIndex, ?string $targetPlayerId = null): void
     {
         $hand = $player->hand;
         $card = $hand[$cardIndex] ?? null;
@@ -76,43 +76,47 @@ class MilleBornesService
             throw new Exception('Card not in hand.');
         }
 
-        // Validation logic here...
-        $this->validateMove($player, $card, $targetPlayerId);
+        app(MoveValidationService::class)->validateMove($game, $player, $card, $targetPlayerId);
 
         array_splice($hand, $cardIndex, 1);
         $player->hand = $hand;
 
         switch ($card['type']) {
-            case self::CARD_TYPE_DISTANCE:
-                $player->distance += $card['value'];
+            case CardType::CARD_TYPE_DISTANCE:
+                $pile = $player->distance_pile ?? [];
+                $pile[] = $card;
+                $player->distance_pile = $pile;
                 break;
-            case self::CARD_TYPE_HAZARD:
-                $targetPlayer = Player::find($targetPlayerId);
-                $hazards = $targetPlayer->active_hazards;
-                $hazards[] = $card['subtype'];
-                $targetPlayer->active_hazards = $hazards;
+            case CardType::CARD_TYPE_HAZARD:
+                $targetPlayer = $game->players->where('unique_identifier', $targetPlayerId)->firstOrFail();
+
+                if ($card['subtype'] === 'speed_limit') {
+                    $speedPile = $targetPlayer->speed_pile;
+                    $speedPile[] = $card;
+                    $targetPlayer->speed_pile = $speedPile;
+                    $targetPlayer->save();
+                    break;
+                }
+
+                $battlePile = $targetPlayer->battle_pile;
+                $battlePile[] = $card;
+                $targetPlayer->battle_pile = $battlePile;
                 $targetPlayer->save();
                 break;
-            case self::CARD_TYPE_REMEDY:
-                $hazards = $player->active_hazards;
-                // Logic to remove the corresponding hazard
-                $player->active_hazards = $hazards;
+            case CardType::CARD_TYPE_REMEDY:
+                $battlePile = $player->battle_pile;
+                $battlePile[] = $card;
+                $player->battle_pile = $battlePile;
                 break;
-            case self::CARD_TYPE_SAFETY:
-                $permanents = $player->permanents;
-                $permanents[] = $card['subtype'];
-                $player->permanents = $permanents;
-                // Logic for coup fourre
+            case CardType::CARD_TYPE_SAFETY:
+                $safeties = $player->safeties ?? [];
+                $safeties[] = $card;
+                $player->safeties = $safeties;
+                // TODO Logic for coup fourre
                 break;
         }
 
         $player->save();
-
-        $game = $player->game;
-        $discardPile = $game->discard_pile;
-        $discardPile[] = $card;
-        $game->discard_pile = $discardPile;
-        $game->save();
 
         $this->nextTurn($game);
     }
@@ -136,11 +140,6 @@ class MilleBornesService
         $game->save();
 
         $this->nextTurn($game);
-    }
-
-    private function validateMove(Player $player, array $card, ?int $targetPlayerId): void
-    {
-        // Extensive validation logic will be implemented here
     }
 
     private function nextTurn(Game $game): void
