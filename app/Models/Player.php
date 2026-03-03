@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\UniqueIdentifier;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Player extends Authenticatable
 {
+    use HasFactory;
+    use UniqueIdentifier;
+
     protected $guarded = [];
 
     protected $casts = [
