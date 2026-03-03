@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Head, useForm, usePage, router } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import { start, show } from '@/routes/games';
 import { useEcho } from "@laravel/echo-vue";
 import GameLayout from "@/layouts/GameLayout.vue";
@@ -15,7 +15,6 @@ const props = defineProps<{
     };
 }>();
 
-const page = usePage();
 const players = ref(props.lobby.game.players || []);
 const isHost = ref(false);
 
