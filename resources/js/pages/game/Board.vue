@@ -27,6 +27,7 @@ const form = useForm({
 const page = usePage();
 const game = ref(props.game);
 const isMyTurn = ref(false);
+const iWasAttacked = ref(false);
 const showHazardModal = ref(false);
 const pendingHazardCardIndex = ref<number | null>(null);
 const selectedTargetId = ref<number | null>(null);
@@ -34,7 +35,9 @@ const showFlashModal = ref(false);
 const flashMessage = ref('');
 const flashType = ref<'error' | 'success' | 'info'>('info');
 
-const checkIsMyTurn = () => props.player.unique_identifier === game.value.current_player.unique_identifier;
+const checkIsMyTurn = () => props.player.unique_identifier === game.value.current_player?.unique_identifier;
+
+const checkIWasAttacked = () => props.player.unique_identifier === game.value.last_targeted_player?.unique_identifier;
 
 const opponents = () => game.value.players.filter(p => p.unique_identifier !== props.player.unique_identifier);
 
@@ -64,6 +67,15 @@ const playCard = (cardIndex: number) => {
     form.target_player_id = null;
     form.post(action(game.value.unique_identifier), {
         onError: (e) => postError(e, 'Failed to play card.'),
+    });
+};
+
+const coupFourre = () => {
+    form.action = 'coup_fourre';
+    form.card_index = cardIndex;
+    form.target_player_id = null;
+    form.post(action(game.value.unique_identifier), {
+        onError: (e) => postError(e, 'Failed to draw card.'),
     });
 };
 
@@ -103,11 +115,11 @@ const discardCard = (cardIndex: number) => {
 
 const cardTypeBadge = (type: string) => {
     switch (type) {
-        case 'hazard':   return 'bg-red-900/80 text-red-300';
-        case 'remedy':   return 'bg-emerald-900/80 text-emerald-300';
-        case 'safety':   return 'bg-amber-900/80 text-amber-300';
+        case 'hazard': return 'bg-red-900/80 text-red-300';
+        case 'remedy': return 'bg-emerald-900/80 text-emerald-300';
+        case 'safety': return 'bg-amber-900/80 text-amber-300';
         case 'distance': return 'bg-blue-900/80 text-blue-300';
-        default:         return 'bg-stone-800/80 text-stone-300';
+        default: return 'bg-stone-800/80 text-stone-300';
     }
 };
 
@@ -133,11 +145,9 @@ useEcho(
     "SwitchTurn",
     (e: any) => {
         game.value = e.game;
-
-
-        console.log({d: game.value.last_discard_card});
-
         isMyTurn.value = checkIsMyTurn();
+        iWasAttacked.value = checkIWasAttacked();
+
         if (e.message) triggerFlash(e.message, 'info');
     },
 );
@@ -348,18 +358,29 @@ useEcho(
                             <!-- Buttons beside the card -->
                             <div class="flex-1 flex flex-col justify-center gap-1.5 pr-2 py-2">
                                 <p class="text-[10px] font-semibold text-yellow-200/70 capitalize leading-tight font-serif">{{ card.label ?? card.subtype }}</p>
-                                <template v-if="isMyTurn && player.hand.length >= 7">
+
+
+                                <template v-if="iWasAttacked && card.type === 'safety'">
                                     <button
                                         class="w-full py-1 rounded text-[10px] font-bold uppercase tracking-wide text-yellow-950 bg-gradient-to-br from-yellow-700 to-yellow-500 hover:opacity-85 transition-opacity cursor-pointer"
-                                        @click="playCard(index)"
-                                    >Play</button>
-                                    <button
-                                        class="w-full py-1 rounded text-[10px] font-bold uppercase tracking-wide text-red-300 bg-red-900/60 border border-red-900/80 hover:bg-red-900/80 transition-colors cursor-pointer"
-                                        @click="discardCard(index)"
-                                    >Discard</button>
+                                        @click="coupFourre(index)"
+                                    >Coup Fourre</button>
                                 </template>
-                                <p v-if="isMyTurn === false" class="text-[9px] uppercase tracking-wide text-yellow-900 opacity-60">Not your turn</p>
-                                <p v-if="isMyTurn && player.hand.length == 6" class="text-[9px] uppercase tracking-wide text-yellow-900 opacity-60">Draw a card first</p>
+
+                                <template v-else>
+                                    <template v-if="isMyTurn && player.hand.length >= 7">
+                                        <button
+                                            class="w-full py-1 rounded text-[10px] font-bold uppercase tracking-wide text-yellow-950 bg-gradient-to-br from-yellow-700 to-yellow-500 hover:opacity-85 transition-opacity cursor-pointer"
+                                            @click="playCard(index)"
+                                        >Play</button>
+                                        <button
+                                            class="w-full py-1 rounded text-[10px] font-bold uppercase tracking-wide text-red-300 bg-red-900/60 border border-red-900/80 hover:bg-red-900/80 transition-colors cursor-pointer"
+                                            @click="discardCard(index)"
+                                        >Discard</button>
+                                    </template>
+                                    <p v-if="isMyTurn === false" class="text-[9px] uppercase tracking-wide text-yellow-900 opacity-60">Not your turn</p>
+                                    <p v-if="isMyTurn && player.hand.length == 6" class="text-[9px] uppercase tracking-wide text-yellow-900 opacity-60">Draw a card first</p>
+                                </template>
                             </div>
                         </div>
 
@@ -434,16 +455,13 @@ useEcho(
                 <DialogTitle
                     class="font-display text-lg tracking-wide"
                     :class="{
-                        'text-red-300':     flashType === 'error',
+                        'text-red-300': flashType === 'error',
                         'text-emerald-300': flashType === 'success',
                         'text-yellow-300':  flashType === 'info',
                     }"
                 >
-                    <span v-if="flashType === 'error'">Action Failed</span>
-                    <span v-else-if="flashType === 'success'">Success</span>
-                    <span v-else>Notice</span>
                 </DialogTitle>
-                <DialogDescription class="text-yellow-200/70 text-sm mt-1.5 whitespace-pre-wrap">
+                <DialogDescription class="text-yellow-200/70 text-sm mt-1.5 whitespace-pre-wrap text-center">
                     {{ flashMessage }}
                 </DialogDescription>
             </DialogHeader>

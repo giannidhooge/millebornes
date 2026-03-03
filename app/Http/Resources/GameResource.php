@@ -19,7 +19,8 @@ class GameResource extends JsonResource
             'discard_pile' => $this->discard_pile,
             'last_discard_card' => array_last($this->discard_pile),
             'status' => $this->status,
-            'current_player' => $this->currentPlayer?->toArray(),
+            'current_player' => PlayerResource::make($this->currentPlayer),
+            'last_targeted_player' => PlayerResource::make($this->lastTargetedPlayer),
             'players' => $this->players->map(fn(Player $player) => PlayerResource::make($player)),
         ];
     }

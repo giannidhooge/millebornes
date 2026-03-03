@@ -65,6 +65,7 @@ class GameController extends Controller
             }
 
             match ($action) {
+                'coup_fourre' => $this->gameService->coupFourre($game, $player, $cardIndex),
                 'play' => $this->gameService->playCard($game, $player, $cardIndex, $targetPlayerId),
                 'discard' => $this->gameService->discardCard($player, $cardIndex),
                 default => throw new Exception('Invalid action.'),
