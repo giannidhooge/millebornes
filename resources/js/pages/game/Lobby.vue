@@ -4,13 +4,14 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import { start, show } from '@/routes/games';
 import { useEcho } from "@laravel/echo-vue";
 import GameLayout from "@/layouts/GameLayout.vue";
+import type { Player } from '@/models/Player';
 
 const props = defineProps<{
-    player: any,
+    player: Player,
     lobby: {
         code: string;
         game: {
-            players: any[];
+            players: Player[];
         };
     };
 }>();

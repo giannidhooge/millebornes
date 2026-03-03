@@ -6,17 +6,12 @@ import { welcome } from '@/routes/index';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useEcho } from "@laravel/echo-vue";
 import GameLayout from "@/layouts/GameLayout.vue";
+import type { Game } from '@/models/Game';
+import type { Player } from '@/models/Player';
 
 const props = defineProps<{
-    player: any;
-    game: {
-        unique_identifier: number;
-        current_player: any;
-        players: any[];
-        discard_pile: any[];
-        deck_size: number;
-        last_discard_card: any;
-    };
+    player: Player;
+    game: Game;
 }>();
 
 const form = useForm({
