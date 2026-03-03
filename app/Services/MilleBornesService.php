@@ -186,6 +186,18 @@ class MilleBornesService
                     $player->battle_pile = $battlePile;
                 }
 
+                $topSpeedCard = $player->getTopSpeedCard();
+                if ($card['subtype'] === CardType::SAFETY_DRIVING_ACE && $topSpeedCard && $topSpeedCard['subtype'] === CardType::HAZARD_SPEED_LIMIT) {
+                    $speedPile = $player->speed_pile;
+                    $speedPile[] = [
+                        'type' => CardType::CARD_TYPE_REMEDY,
+                        'subtype' => CardType::REMEDY_END_OF_LIMIT,
+                        'value' => 0,
+                        'label' => 'End of Limit',
+                    ];
+                    $player->speed_pile = $speedPile;
+                }
+
                 $game->last_targeted_player_id = null;
                 break;
         }
