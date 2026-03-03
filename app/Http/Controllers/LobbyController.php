@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Auth;
-use App\Models\Game;
 use App\Models\Lobby;
 use App\Models\Player;
 use App\Services\MilleBornesService;
@@ -15,6 +14,8 @@ use App\Events\PlayerJoinsLobby;
 
 class LobbyController extends Controller
 {
+    private MilleBornesService $gameService;
+
     public function __construct(MilleBornesService $gameService)
     {
         $this->gameService = $gameService;
@@ -42,8 +43,10 @@ class LobbyController extends Controller
             'game_id' => $game->id,
             'unique_identifier' => Str::uuid()->toString(),
             'hand' => [],
-            'active_hazards' => [],
-            'permanents' => [],
+            'battle_pile' => [],
+            'distance_pile' => [],
+            'safeties' => [],
+            'speed_pile' => [],
             'is_host' => true,
         ]);
         
@@ -76,8 +79,10 @@ class LobbyController extends Controller
             'game_id' => $lobby->game->id,
             'unique_identifier' => Str::uuid()->toString(),
             'hand' => [],
-            'active_hazards' => [],
-            'permanents' => [],
+            'battle_pile' => [],
+            'distance_pile' => [],
+            'safeties' => [],
+            'speed_pile' => [],
             'is_host' => false,
         ]);
 

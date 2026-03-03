@@ -32,10 +32,10 @@ return new class extends Migration
             $table->string('unique_identifier', 36)->unique()->index();
             $table->boolean('is_host')->default(false);
             $table->json('hand');
-            $table->integer('distance')->default(0);
-            $table->boolean('speed_limit')->default(false);
-            $table->json('active_hazards');
-            $table->json('permanents');
+            $table->json('safeties');
+            $table->json('battle_pile');
+            $table->json('distance_pile');
+            $table->json('speed_pile');
             $table->timestamps();
         });
 

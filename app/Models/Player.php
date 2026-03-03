@@ -12,8 +12,10 @@ class Player extends Authenticatable
 
     protected $casts = [
         'hand' => 'array',
-        'active_hazards' => 'array',
-        'permanents' => 'array',
+        'safeties' => 'array',
+        'battle_pile' => 'array',
+        'distance_pile' => 'array',
+        'speed_pile' => 'array',
     ];
 
     public function game(): BelongsTo
