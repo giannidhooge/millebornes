@@ -55,7 +55,7 @@ const startGame = () => {
                         <div class="flex items-baseline justify-center gap-2 mb-1">
                             <span class="font-display text-2xl font-black tracking-widest uppercase text-yellow-300">Mille Bornes</span>
                         </div>
-                        <p class="text-yellow-800 text-[10px] tracking-[0.3em] uppercase font-serif mt-1">Game Lobby</p>
+                        <p class="text-yellow-500 text-[10px] tracking-[0.3em] uppercase font-serif mt-1">Game Lobby</p>
                     </div>
 
                     <!-- Body -->
@@ -63,11 +63,11 @@ const startGame = () => {
 
                         <!-- Lobby code -->
                         <div class="text-center mb-6">
-                            <p class="text-[10px] tracking-[0.3em] uppercase text-yellow-800 font-serif mb-2">Lobby Code</p>
+                            <p class="text-[10px] tracking-[0.3em] uppercase text-yellow-500 font-serif mb-2">Lobby Code</p>
                             <div class="inline-flex items-center gap-3 px-6 py-3 border-2 border-yellow-800/60 rounded-xl bg-black/30">
                                 <span class="font-display text-3xl font-black tracking-[0.2em] text-yellow-300">{{ lobby.code }}</span>
                             </div>
-                            <p class="text-yellow-800/60 text-[10px] tracking-wide mt-2">Share this code with your friends</p>
+                            <p class="text-yellow-500/60 text-[10px] tracking-wide mt-2">Share this code with your friends</p>
                         </div>
 
                         <!-- Divider -->
@@ -76,8 +76,8 @@ const startGame = () => {
                         <!-- Players list -->
                         <div class="mb-6">
                             <div class="flex items-center justify-between mb-3">
-                                <p class="text-[10px] tracking-[0.3em] uppercase text-yellow-800 font-serif">Players</p>
-                                <span class="text-[10px] tracking-wide text-yellow-700 font-semibold">{{ players.length }} joined</span>
+                                <p class="text-[10px] tracking-[0.3em] uppercase text-yellow-500 font-serif">Players</p>
+                                <span class="text-[10px] tracking-wide text-yellow-500 font-semibold">{{ players.length }} joined</span>
                             </div>
 
                             <ul class="flex flex-col gap-2">
@@ -96,7 +96,7 @@ const startGame = () => {
                                         Host
                                     </span>
                                     <span v-else-if="p.unique_identifier === player.unique_identifier"
-                                          class="ml-auto text-[9px] uppercase tracking-wide text-yellow-800">
+                                          class="ml-auto text-[9px] uppercase tracking-wide text-yellow-500">
                                         You
                                     </span>
                                 </li>
@@ -105,7 +105,7 @@ const startGame = () => {
                                 <li v-if="players.length < 2"
                                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-dashed border-yellow-800/20 opacity-40">
                                     <div class="w-7 h-7 rounded-full border border-dashed border-yellow-800/40 flex-shrink-0"></div>
-                                    <span class="text-xs text-yellow-800 tracking-wide">Waiting for player…</span>
+                                    <span class="text-xs text-yellow-500 tracking-wide">Waiting for player…</span>
                                 </li>
                             </ul>
                         </div>
@@ -118,18 +118,18 @@ const startGame = () => {
                                 class="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-widest transition-all duration-200 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
                                 :class="players.length >= 2
                                     ? 'bg-gradient-to-br from-yellow-700 to-yellow-500 text-yellow-950 hover:opacity-85 shadow-[0_0_20px_rgba(201,168,76,0.2)]'
-                                    : 'bg-yellow-900/30 text-yellow-800 border border-yellow-800/30'"
+                                    : 'bg-yellow-600/30 text-yellow-500 border border-yellow-800/30'"
                             >
                                 {{ form.processing ? 'Starting…' : 'Start Game' }}
                             </button>
-                            <p v-if="players.length < 2" class="text-center text-[10px] text-yellow-800 tracking-wide mt-2 opacity-60">
+                            <p v-if="players.length < 2" class="text-center text-[10px] text-yellow-500 tracking-wide mt-2 opacity-60">
                                 Need at least 2 players to start
                             </p>
                         </div>
 
                         <div v-else class="flex items-center justify-center gap-2 py-3">
                             <span class="w-1.5 h-1.5 rounded-full bg-yellow-600 animate-pulse"></span>
-                            <p class="text-sm text-yellow-700 tracking-wide">Waiting for the host to start…</p>
+                            <p class="text-sm text-yellow-500 tracking-wide">Waiting for the host to start…</p>
                         </div>
                     </div>
                 </div>

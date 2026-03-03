@@ -199,11 +199,11 @@ useEcho(
                     class="flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-semibold tracking-widest transition-all duration-300"
                     :class="isMyTurn
                         ? 'border-yellow-500 text-yellow-200 bg-yellow-500/10 shadow-[0_0_16px_rgba(201,168,76,0.25)]'
-                        : 'border-yellow-900/40 text-yellow-700 bg-black/30'"
+                        : 'border-yellow-600/40 text-yellow-500 bg-black/30'"
                 >
                     <span
                         class="w-2 h-2 rounded-full transition-all duration-300"
-                        :class="isMyTurn ? 'bg-yellow-300 shadow-[0_0_8px_theme(colors.yellow.400)] animate-pulse' : 'bg-yellow-900'"
+                        :class="isMyTurn ? 'bg-yellow-300 shadow-[0_0_8px_theme(colors.yellow.400)] animate-pulse' : 'bg-yellow-600'"
                     ></span>
                     <span v-if="isMyTurn">Your Turn</span>
                     <span v-else>{{ game.current_player?.name }}'s Turn</span>
@@ -215,7 +215,7 @@ useEcho(
 
                 <!-- ── LEFT: Opponents ── -->
                 <aside class="border-r border-yellow-800/20 bg-black/15 p-3 overflow-y-auto overflow-x-hidden thin-scroll">
-                    <div class="text-center text-[10px] tracking-[0.3em] uppercase text-yellow-800 pb-1.5 mb-3 border-b border-yellow-800/20 font-serif">
+                    <div class="text-center text-[10px] tracking-[0.3em] uppercase text-yellow-500 pb-1.5 mb-3 border-b border-yellow-800/20 font-serif">
                         Opponents
                     </div>
 
@@ -224,7 +224,7 @@ useEcho(
                         <p class="font-bold text-sm text-yellow-50 mb-1 font-serif">{{ opp.name }}</p>
                         <div class="flex items-baseline gap-1 mb-2">
                             <span class="font-display text-xl font-black text-yellow-300">{{ opp.distance }}</span>
-                            <span class="text-[10px] text-yellow-700 uppercase tracking-widest">km</span>
+                            <span class="text-[10px] text-yellow-500 uppercase tracking-widest">km</span>
                         </div>
 
                         <div class="flex gap-2 mb-1.5">
@@ -239,7 +239,7 @@ useEcho(
                                          :alt="pile.card.label" class="w-full h-full object-cover" />
                                     <span v-else>{{ pile.icon }}</span>
                                 </div>
-                                <span class="text-[9px] uppercase tracking-wide text-yellow-800">{{ pile.label }}</span>
+                                <span class="text-[9px] uppercase tracking-wide text-yellow-500">{{ pile.label }}</span>
                             </div>
                         </div>
 
@@ -272,21 +272,21 @@ useEcho(
                                 class="relative w-[70px] h-[100px] rounded-md border-2 overflow-hidden shadow-[2px_4px_12px_rgba(0,0,0,0.5)] transition-all duration-200 bg-gradient-to-br from-blue-950 to-blue-900"
                                 :class="isMyTurn && player.hand.length <= 6
                                     ? 'border-yellow-800/60 cursor-pointer hover:-translate-y-1 hover:border-yellow-500 hover:shadow-[2px_8px_20px_rgba(0,0,0,0.6),0_0_16px_rgba(201,168,76,0.25)]'
-                                    : 'border-yellow-900/40'"
+                                    : 'border-yellow-600/40'"
                                 @click="isMyTurn && player.hand.length <= 6 && drawCard()"
                             >
                                 <div class="absolute inset-1 border border-yellow-800/20 rounded pointer-events-none"></div>
                                 <div class="relative z-10 flex flex-col items-center justify-center h-full gap-0.5">
                                     <span class="font-display text-2xl font-black text-yellow-300">{{ game.deck_size }}</span>
-                                    <span class="text-[9px] tracking-[0.2em] uppercase text-yellow-700">cards</span>
+                                    <span class="text-[9px] tracking-[0.2em] uppercase text-yellow-500">cards</span>
                                     <span v-if="isMyTurn && player.hand.length <= 6"
                                           class="mt-1.5 text-[8px] tracking-wide uppercase text-yellow-400 animate-pulse">Draw</span>
                                 </div>
                             </div>
-                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-800">Draw Pile</span>
+                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-500">Draw Pile</span>
                         </div>
 
-                        <span class="text-3xl text-yellow-800/40">→</span>
+                        <span class="text-3xl text-yellow-500/40">→</span>
 
                         <!-- Discard pile -->
                         <div class="flex flex-col items-center gap-2">
@@ -297,7 +297,7 @@ useEcho(
                                      class="w-full h-full object-cover" />
                                 <div v-else class="w-full h-full flex items-center justify-center border border-dashed border-yellow-800/20 text-xl opacity-30">—</div>
                             </div>
-                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-800">Discard</span>
+                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-500">Discard</span>
                         </div>
                     </div>
 
@@ -312,13 +312,13 @@ useEcho(
                                      class="w-full h-full object-cover" />
                                 <div v-else class="w-full h-full flex items-center justify-center text-2xl opacity-30">⚔</div>
                             </div>
-                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-800">Battle</span>
+                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-500">Battle</span>
                         </div>
 
                         <!-- Distance odometer -->
                         <div class="flex flex-col items-center px-5 py-3 border-2 border-yellow-800/60 rounded-xl bg-black/30 shadow-[0_0_20px_rgba(201,168,76,0.1)]">
                             <span class="font-display text-5xl font-black text-yellow-300 leading-none">{{ myPlayerData?.distance ?? 0 }}</span>
-                            <span class="text-xs tracking-[0.3em] uppercase text-yellow-700 mt-1">km</span>
+                            <span class="text-xs tracking-[0.3em] uppercase text-yellow-500 mt-1">km</span>
                             <span v-if="myPlayerData?.speed_limit"
                                   class="mt-2 px-2 py-0.5 bg-red-900 rounded text-[10px] uppercase tracking-wide text-red-300 font-bold">
                                 ⚠ Speed Limit
@@ -334,13 +334,13 @@ useEcho(
                                      class="w-full h-full object-cover" />
                                 <div v-else class="w-full h-full flex items-center justify-center text-2xl opacity-30">⚡</div>
                             </div>
-                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-800">Speed</span>
+                            <span class="text-[10px] tracking-[0.2em] uppercase text-yellow-500">Speed</span>
                         </div>
                     </div>
 
                     <!-- Safeties row -->
                     <div v-if="myPlayerData?.safeties?.length" class="flex items-center gap-3 z-10">
-                        <span class="text-[10px] tracking-[0.3em] uppercase text-yellow-800">Safeties</span>
+                        <span class="text-[10px] tracking-[0.3em] uppercase text-yellow-500">Safeties</span>
                         <div class="flex gap-2">
                             <div v-for="(s, i) in myPlayerData.safeties" :key="i"
                                  class="w-13 h-[72px] border border-yellow-700/40 rounded overflow-hidden bg-black/20">
@@ -352,7 +352,7 @@ useEcho(
 
                 <!-- ── RIGHT: Hand ── -->
                 <aside class="border-l border-yellow-800/20 bg-black/20 p-3 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden thin-scroll">
-                    <div class="text-center text-[10px] tracking-[0.3em] uppercase text-yellow-800 pb-1.5 mb-3 border-b border-yellow-800/20 font-serif">
+                    <div class="text-center text-[10px] tracking-[0.3em] uppercase text-yellow-500 pb-1.5 mb-3 border-b border-yellow-800/20 font-serif">
                         Your Hand
                     </div>
 
@@ -400,14 +400,14 @@ useEcho(
                                             @click="discardCard(index)"
                                         >Discard</button>
                                     </template>
-                                    <p v-if="isMyTurn === false" class="text-[9px] uppercase tracking-wide text-yellow-900 opacity-60">Not your turn</p>
-                                    <p v-if="isMyTurn && player.hand.length == 6" class="text-[9px] uppercase tracking-wide text-yellow-900 opacity-60">Draw a card first</p>
+                                    <p v-if="isMyTurn === false" class="text-[9px] uppercase tracking-wide text-yellow-600 opacity-60">Not your turn</p>
+                                    <p v-if="isMyTurn && player.hand.length == 6" class="text-[9px] uppercase tracking-wide text-yellow-600 opacity-60">Draw a card first</p>
                                 </template>
                             </div>
                         </div>
 
                         <p v-if="!player?.hand?.length"
-                           class="text-center py-6 text-[11px] tracking-[0.2em] uppercase text-yellow-800 opacity-60">
+                           class="text-center py-6 text-[11px] tracking-[0.2em] uppercase text-yellow-500 opacity-60">
                             No cards in hand
                         </p>
                     </div>
@@ -437,7 +437,7 @@ useEcho(
                 >
                     <div>
                         <p class="font-bold text-sm text-yellow-50 font-serif">{{ opp.name }}</p>
-                        <p class="text-xs text-yellow-700">{{ opp.distance }} km</p>
+                        <p class="text-xs text-yellow-500">{{ opp.distance }} km</p>
                     </div>
                     <span v-if="selectedTargetId === opp.unique_identifier" class="text-yellow-300 text-base font-bold">✓</span>
                 </button>
