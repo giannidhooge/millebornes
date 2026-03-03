@@ -16,7 +16,7 @@ use App\Exceptions\UnresolvedHazardException;
 use App\Models\Game;
 use App\Models\Player;
 
-class MoveValidationService
+class PlayCardValidationService
 {
     private Game $game;
 
@@ -25,7 +25,6 @@ class MoveValidationService
         $this->game = $game;
 
         $cardType = $card['type'];
-        $cardSubtype = $card['subtype'];
 
         switch ($cardType) {
             case 'distance':

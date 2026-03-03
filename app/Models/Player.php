@@ -63,4 +63,11 @@ class Player extends Authenticatable
             return (string)$card['value'] === $value;
         }));
     }
+
+    public function addCardToPile(array $card, string $pileName): void
+    {
+        $pile = $this->{$pileName};
+        $pile[] = $card;
+        $this->{$pileName} = $pile;
+    }
 }

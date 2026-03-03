@@ -8,6 +8,7 @@ use App\Models\Game;
 use App\Models\Lobby;
 use App\Exceptions\AbstractMilleBornesException;
 use App\Services\MilleBornesService;
+use App\Services\PlayCardService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Events\GameStart;
@@ -54,20 +55,21 @@ class GameController extends Controller
         $action = $request->input('action');
         $cardIndex = $request->input('card_index');
         $targetPlayerId = $request->input('target_player_id');
-
+        
         try {
+            $playCardService = app(PlayCardService::class);
             if ($action === 'draw') {
-                $this->gameService->drawCard($game);
-
+                $playCardService->drawCard($game);
+                
                 event(new CardDrawn($game));
-
+                
                 return back();
             }
 
             match ($action) {
-                'coup_fourre' => $this->gameService->coupFourre($game, $player, $cardIndex),
-                'play' => $this->gameService->playCard($game, $player, $cardIndex, $targetPlayerId),
-                'discard' => $this->gameService->discardCard($player, $cardIndex),
+                'coup_fourre' => $playCardService->coupFourre($game, $player, $cardIndex),
+                'play' => $playCardService->playCard($game, $player, $cardIndex, $targetPlayerId),
+                'discard' => $playCardService->discardCard($game, $player, $cardIndex),
                 default => throw new Exception('Invalid action.'),
             };
         } catch (Throwable $e) {
