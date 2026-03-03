@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { onMounted, ref, computed, watch } from 'vue';
 import { action } from '@/routes/games';
+import { welcome } from '@/routes/index';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useEcho } from "@laravel/echo-vue";
 import GameLayout from "@/layouts/GameLayout.vue";
@@ -123,6 +124,10 @@ const cardTypeBadge = (type: string) => {
     }
 };
 
+const goHome = () => {
+    router.visit(welcome());
+};
+
 onMounted(() => {
     isMyTurn.value = checkIsMyTurn();
 });
@@ -159,6 +164,21 @@ useEcho(
         game.value = e.game;
     },
 );
+
+useEcho(
+    `game.${game.value.unique_identifier}`,
+    "PlayerWon",
+    (e: any) => {
+        game.value = e.game;
+        isMyTurn.value = false;
+
+        const iWon = e.player.unique_identifier === props.player.unique_identifier;
+        const status = iWon ? 'success' : 'error';
+        const message = iWon ? 'You won!' : `You lost! ${e.player.name} won!`;
+
+        triggerFlash(message, status)
+    },
+);
 </script>
 
 <template>
@@ -172,8 +192,15 @@ useEcho(
                     <span class="font-display text-xl font-black tracking-widest uppercase text-yellow-300">Mille Bornes</span>
                 </div>
 
+                <div v-if="game.status === 'finished'">
+                     <button
+                        class="w-full py-1 px-3 rounded text-[10px] font-bold uppercase tracking-wide text-yellow-950 bg-gradient-to-br from-yellow-700 to-yellow-500 hover:opacity-85 transition-opacity cursor-pointer"
+                        @click="goHome()"
+                    >Play again</button>
+                </div>
+
                 <!-- Turn indicator -->
-                <div
+                <div v-if="game.status !== 'finished'"
                     class="flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-semibold tracking-widest transition-all duration-300"
                     :class="isMyTurn
                         ? 'border-yellow-500 text-yellow-200 bg-yellow-500/10 shadow-[0_0_16px_rgba(201,168,76,0.25)]'

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\PlayerWon;
 use App\Models\Enums\CardType;
 use App\Models\Game;
 use App\Models\Lobby;
@@ -116,6 +117,16 @@ class MilleBornesService
                 $pile = $player->distance_pile ?? [];
                 $pile[] = $card;
                 $player->distance_pile = $pile;
+                
+                $game->last_targeted_player_id = null;
+
+                if ($player->getTotalMileage() === 1000) {
+                    $game->status = 'finished';
+                    $game->current_player_id = null;
+
+                    event(new PlayerWon($game, $player));
+                }
+
                 break;
             case CardType::CARD_TYPE_HAZARD:
                 $targetPlayer = $game->players->where('unique_identifier', $targetPlayerId)->firstOrFail();
@@ -208,6 +219,10 @@ class MilleBornesService
 
     private function nextTurn(Game $game): void
     {
+        if ($game->status === 'finished') {
+            return;
+        }
+                
         $players = $game->players()->get();
         $currentPlayerIndex = $players->search(fn ($p) => $p->id === $game->current_player_id);
         $nextPlayerIndex = ($currentPlayerIndex + 1) % $players->count();
