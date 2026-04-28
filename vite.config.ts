@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
+import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig({
     plugins: [
@@ -12,6 +13,7 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        mkcert(),
         wayfinder({
             formVariants: true,
         }),
@@ -24,4 +26,11 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        port: 4200,
+        host: 'localhost',
+        hmr: {
+            host: 'localhost', // Force HMR to use localhost
+        },
+    }
 });
